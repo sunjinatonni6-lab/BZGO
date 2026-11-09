@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BazarGo - My Account</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+  <link rel="stylesheet" href="assets/css/pro-upgrade.css">
+<link rel="stylesheet" href="assets/css/mobile-nav.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">BazarGo</a>
+      <div class="nav-actions">
+        <a href="index.html"><i class="fa-solid fa-store"></i> Store</a>
+        <a href="my-orders.html"><i class="fa-solid fa-box-open"></i> My Orders</a>
+        <a href="cart.html"><i class="fa-solid fa-cart-shopping"></i> Cart (<span id="cart-count">0</span>)</a>
+        <button id="logout-btn" style="background:none; border:none; cursor:pointer; color:var(--danger); font-weight:600; margin-left:8px;">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="max-width: 900px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h2 class="section-title" style="margin-bottom: 0;">Customer Profile</h2>
+      <a href="my-orders.html" class="btn btn-outline" style="color: var(--dark); border-color: var(--border);">
+        <i class="fa-solid fa-clock-rotate-left"></i> Order History
+      </a>
+    </div>
+
+    <!-- Alert Banner -->
+    <div id="status-msg" style="display: none; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.95rem;"></div>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+      
+      <!-- User Overview Card -->
+      <div style="background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; text-align: center; height: fit-content;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: #ffece2; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1rem;">
+          <i class="fa-solid fa-user"></i>
+        </div>
+        <h3 id="display-name" style="margin-bottom: 0.25rem; color: var(--dark);">Loading...</h3>
+        <p id="display-email" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Loading...</p>
+        <span id="role-badge" style="background: #e2e8f0; color: var(--slate); padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Customer</span>
+      </div>
+
+      <!-- Profile & Address Form -->
+      <div style="background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 2rem;">
+        <h3 style="margin-bottom: 1.5rem; color: var(--dark); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+          Personal & Delivery Information
+        </h3>
+        
+        <form id="profile-form">
+          <div class="form-group">
+            <label for="prof-name">Full Name</label>
+            <input type="text" id="prof-name" required placeholder="Rahim Ahmed">
+          </div>
+
+          <div class="form-group">
+            <label for="prof-email">Email Address</label>
+            <input type="email" id="prof-email" disabled style="background-color: #f8fafc; cursor: not-allowed; color: #64748b;">
+            <small style="color: var(--text-muted);">Email address cannot be modified directly.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="prof-phone">Phone Number</label>
+            <input type="tel" id="prof-phone" placeholder="+880 1700-000000">
+          </div>
+
+          <div class="form-group">
+            <label for="prof-address">Default Delivery Address</label>
+            <textarea id="prof-address" rows="3" placeholder="House, Road, Area, City, Postal Code"></textarea>
+          </div>
+
+          <button type="submit" id="save-btn" class="btn btn-primary" style="margin-top: 1rem;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./assets/js/firebase-config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { logoutUser } from "./assets/js/auth.js";
+    import { updateCartBadge } from "./assets/js/cart.js";
+
+    updateCartBadge();
+    document.getElementById("logout-btn").addEventListener("click", logoutUser);
+
+    const statusMsg = document.getElementById("status-msg");
+    const saveBtn = document.getElementById("save-btn");
+
+    function showMessage(text, isError = false) {
+      statusMsg.style.display = "block";
+      statusMsg.textContent = text;
+      statusMsg.style.backgroundColor = isError ? "#fee2e2" : "#ecfdf5";
+      statusMsg.style.color = isError ? "#b91c1c" : "#047857";
+      statusMsg.style.border = `1px solid ${isError ? '#f87171' : '#a7f3d0'}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Auth Guard & Population
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+
+        if (snap.exists()) {
+          const data = snap.data();
+          document.getElementById("display-name").textContent = data.fullName || "User";
+          document.getElementById("display-email").textContent = user.email;
+          document.getElementById("role-badge").textContent = data.role || "customer";
+
+          document.getElementById("prof-name").value = data.fullName || "";
+          document.getElementById("prof-email").value = user.email;
+          document.getElementById("prof-phone").value = data.phone || "";
+          document.getElementById("prof-address").value = data.address || "";
+        }
+      } catch (err) {
+        showMessage("Failed to load profile details: " + err.message, true);
+      }
+    });
+
+    // Form Update Handler
+    document.getElementById("profile-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
+
+      const user = auth.currentUser;
+      if (!user) return;
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, {
+          fullName: document.getElementById("prof-name").value.trim(),
+          phone: document.getElementById("prof-phone").value.trim(),
+          address: document.getElementById("prof-address").value.trim(),
+          updatedAt: serverTimestamp()
+        });
+
+        document.getElementById("display-name").textContent = document.getElementById("prof-name").value.trim();
+        showMessage("Profile updated successfully!");
+      } catch (err) {
+        showMessage("Error updating profile: " + err.message, true);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Save Profile Changes`;
+      }
+    });
+  </script>
+  <script src="assets/js/pro-upgrade.js" defer></script>
+<script type="module" src="assets/js/mobile-nav.js"></script>
+</body>
+</html>

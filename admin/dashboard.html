@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - BazarGo</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="../assets/css/pages/dashboard-admin.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="stylesheet" href="../assets/css/admin-responsive.css">
+  <link rel="stylesheet" href="../assets/css/pro-upgrade.css">
+<link rel="stylesheet" href="../assets/css/mobile-nav.css">
+</head>
+<body>
+
+  <!-- Admin Sidebar -->
+  <aside class="admin-sidebar">
+    <a href="dashboard.html" class="sidebar-brand">
+      <i class="fa-solid fa-boxes-stacked"></i> Bazar<span>Go</span> Admin
+    </a>
+    <ul class="sidebar-menu">
+      <li>
+        <a href="dashboard.html" class="active"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      </li>
+      <li>
+        <a href="products.html"><i class="fa-solid fa-layer-group"></i> Products</a>
+      </li>
+      <li>
+        <a href="orders.html"><i class="fa-solid fa-clipboard-list"></i> Orders</a>
+      </li>
+      <li>
+        <a href="banner.html"><i class="fa-solid fa-image"></i> Hero Banner</a>
+      </li>
+      <li>
+        <a href="../index.html" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Live Storefront</a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <a href="../login.html"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- Main View Area -->
+  <div class="admin-main">
+    <header class="admin-topbar dashboard-topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+        <div><span class="topbar-kicker">BAZARGO CONTROL CENTER</span><h2>Dashboard Overview</h2></div>
+      </div>
+      <div class="topbar-actions">
+        <a class="topbar-store-link" href="../index.html" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i><span>View Store</span></a>
+        <span class="admin-profile-chip"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong>Administrator</strong><small>Store manager</small></span></span>
+      </div>
+    </header>
+
+    <main class="admin-content dashboard-content">
+      <section class="dashboard-welcome">
+        <div>
+          <p class="eyebrow">STORE PERFORMANCE</p>
+          <h1>Dashboard Overview</h1>
+          <p class="welcome-copy">Monitor your BazarGO store, orders and sales in real time.</p>
+        </div>
+        <div class="welcome-actions"><span class="today-chip" id="dashboard-date"><i class="fa-regular fa-calendar"></i> Loading date…</span><div class="live-indicator"><span></span> Live Firestore data</div></div>
+      </section>
+
+      <section class="metrics-grid" aria-label="Store summary">
+        <article class="metric-card"><div class="metric-icon metric-orange"><i class="fa-solid fa-boxes-stacked"></i></div><div><div class="metric-title">Total Products</div><div class="metric-value" id="stat-products">—</div><div class="metric-note" id="product-note">All products</div></div></article>
+        <article class="metric-card"><div class="metric-icon metric-blue"><i class="fa-solid fa-cart-shopping"></i></div><div><div class="metric-title">Total Orders</div><div class="metric-value" id="stat-orders">—</div><div class="metric-note" id="order-note">All-time orders</div></div></article>
+        <article class="metric-card"><div class="metric-icon metric-green"><i class="fa-solid fa-money-bill-trend-up"></i></div><div><div class="metric-title">Total Revenue</div><div class="metric-value" id="stat-revenue">—</div><div class="metric-note">Paid orders only</div></div></article>
+        <article class="metric-card"><div class="metric-icon metric-amber"><i class="fa-solid fa-clock"></i></div><div><div class="metric-title">Pending Orders</div><div class="metric-value" id="stat-pending">—</div><div class="metric-note">Waiting for processing</div></div></article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="dashboard-panel sales-panel">
+          <div class="panel-heading"><div><p class="eyebrow">LAST 7 DAYS</p><h2>Sales Overview</h2></div><span class="panel-tag">Paid revenue</span></div>
+          <div class="sales-chart" id="sales-chart" aria-label="Paid revenue for the last seven days"><p class="chart-empty">Waiting for sales data…</p></div>
+        </article>
+        <article class="dashboard-panel status-panel">
+          <div class="panel-heading"><div><p class="eyebrow">ORDER HEALTH</p><h2>Order Status</h2></div><i class="fa-solid fa-chart-pie panel-heading-icon"></i></div>
+          <div class="status-list">
+            <div class="status-row"><span><i class="status-dot dot-pending"></i>Pending</span><strong id="status-pending">—</strong></div>
+            <div class="status-row"><span><i class="status-dot dot-processing"></i>Processing</span><strong id="status-processing">—</strong></div>
+            <div class="status-row"><span><i class="status-dot dot-shipped"></i>Shipped</span><strong id="status-shipped">—</strong></div>
+            <div class="status-row"><span><i class="status-dot dot-delivered"></i>Delivered</span><strong id="status-delivered">—</strong></div>
+            <div class="status-row"><span><i class="status-dot dot-cancelled"></i>Cancelled</span><strong id="status-cancelled">—</strong></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="dashboard-grid lower-grid">
+        <article class="dashboard-panel inventory-panel">
+          <div class="panel-heading"><div><p class="eyebrow">INVENTORY</p><h2>Stock Alerts</h2></div><a href="products.html" class="panel-link">Manage products <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div id="low-stock-list" class="low-stock-list"><p class="panel-placeholder">Loading inventory…</p></div>
+        </article>
+        <article class="dashboard-panel quick-panel">
+          <div class="panel-heading"><div><p class="eyebrow">QUICK ACCESS</p><h2>Store Management</h2></div></div>
+          <a class="quick-link" href="products.html"><span class="quick-icon"><i class="fa-solid fa-box"></i></span><span><strong>Manage Products</strong><small>Add, edit and update stock</small></span><i class="fa-solid fa-chevron-right"></i></a>
+          <a class="quick-link" href="orders.html"><span class="quick-icon"><i class="fa-solid fa-clipboard-list"></i></span><span><strong>Manage Orders</strong><small>Review and update customer orders</small></span><i class="fa-solid fa-chevron-right"></i></a>
+          <a class="quick-link" href="banner.html"><span class="quick-icon"><i class="fa-solid fa-images"></i></span><span><strong>Manage Banners</strong><small>Update homepage promotions</small></span><i class="fa-solid fa-chevron-right"></i></a>
+        </article>
+      </section>
+
+      <section class="dashboard-panel recent-panel">
+        <div class="panel-heading recent-heading"><div><p class="eyebrow">LATEST ACTIVITY</p><h2>Recent Orders</h2><p class="panel-subtitle">A live snapshot of your latest customer purchases</p></div><div class="recent-tools"><label class="order-search"><i class="fa-solid fa-magnifying-glass"></i><input id="recent-order-search" type="search" placeholder="Search order or customer…" aria-label="Search recent orders"></label><a href="orders.html" class="panel-link">View all orders <i class="fa-solid fa-arrow-right"></i></a></div></div>
+        <div class="table-container"><table class="dashboard-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Order Date</th><th>Status</th></tr></thead><tbody id="recent-orders-body"><tr><td colspan="6" class="table-message">Loading orders…</td></tr></tbody></table></div>
+      </section>
+      <p class="dashboard-footnote"><i class="fa-solid fa-shield-halved"></i> Dashboard figures are read directly from your Firebase Firestore database.</p>
+    </main>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "../assets/js/firebase-config.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { collection, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    const $ = (id) => document.getElementById(id);
+    const money = (value) => `${Number(value || 0).toLocaleString("en-BD", { maximumFractionDigits: 2 })} BDT`;
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" })[c]);
+    const cleanStatus = (value) => String(value || "pending").trim().toLowerCase();
+    const paymentStatus = (order) => String(order.paymentStatus || order.payment_status || "").trim().toLowerCase();
+    const isPaid = (order) => ["paid", "completed", "success", "succeeded"].includes(paymentStatus(order));
+
+    function dateValue(value) {
+      if (!value) return 0;
+      if (typeof value.toMillis === "function") return value.toMillis();
+      if (typeof value.seconds === "number") return value.seconds * 1000;
+      const parsed = new Date(value).getTime();
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    function orderDate(order) { return order.createdAt ?? order.created_at ?? order.orderDate ?? order.date ?? order.timestamp ?? null; }
+    function formatDate(value) {
+      const ms = dateValue(value);
+      return ms ? new Date(ms).toLocaleString("en-GB", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "—";
+    }
+    function amountOf(order) {
+      const raw = order.total ?? order.totalAmount ?? order.amount ?? 0;
+      if (typeof raw === "number" && Number.isFinite(raw)) return Math.max(0, raw);
+      const parsed = Number(String(raw).replace(/,/g, "").replace(/৳|BDT/gi, "").trim());
+      return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    }
+    function itemCount(order) {
+      if (!Array.isArray(order.items)) return Number(order.items) || 0;
+      return order.items.reduce((sum, item) => sum + Math.max(0, Number(item.quantity) || 1), 0);
+    }
+    function tableMessage(message, error = false) {
+      $("recent-orders-body").innerHTML = `<tr><td colspan="6" class="table-message ${error ? "error" : ""}">${escapeHtml(message)}</td></tr>`;
+    }
+    let allDashboardOrders = [];
+    function renderRecentOrders(orders) {
+      allDashboardOrders = [...orders].sort((a,b) => dateValue(orderDate(b)) - dateValue(orderDate(a)));
+      const term = ($("recent-order-search")?.value || "").trim().toLowerCase();
+      const matching = allDashboardOrders.filter(order => {
+        const customer = typeof order.customer === "object" && order.customer
+          ? (order.customer.name || order.customer.fullName || order.customer.email || "")
+          : (order.customer || order.customerName || order.customerEmail || "");
+        return !term || [order.id, customer, order.status].some(value => String(value || "").toLowerCase().includes(term));
+      }).slice(0, term ? 20 : 6);
+      if (!matching.length) return tableMessage(term ? "No orders match your search." : "No orders found yet.");
+      $("recent-orders-body").innerHTML = matching.map(order => {
+        const customer = typeof order.customer === "object" && order.customer
+          ? (order.customer.name || order.customer.fullName || order.customer.email || "N/A")
+          : (order.customer || order.customerName || order.customerEmail || "N/A");
+        const status = cleanStatus(order.status);
+        const statusClass = ["pending", "processing", "shipped", "delivered", "cancelled"].includes(status) ? `status-${status}` : "status-other";
+        return `<tr><td><strong class="order-id">${escapeHtml(order.id)}</strong></td><td>${escapeHtml(customer)}</td><td>${itemCount(order)}</td><td><strong>${money(amountOf(order))}</strong></td><td>${escapeHtml(formatDate(orderDate(order)))}</td><td><span class="order-badge ${statusClass}">${escapeHtml(status)}</span></td></tr>`;
+      }).join("");
+    }
+    function renderSalesChart(orders) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const days = Array.from({length:7}, (_, index) => {
+        const date = new Date(today); date.setDate(today.getDate() - (6-index));
+        const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        const revenue = orders.reduce((sum, order) => {
+          const d = new Date(dateValue(orderDate(order)));
+          return sum + (isPaid(order) && dateValue(orderDate(order)) && d.getFullYear()===date.getFullYear() && d.getMonth()===date.getMonth() && d.getDate()===date.getDate() ? amountOf(order) : 0);
+        }, 0);
+        return { label: date.toLocaleDateString("en", {weekday:"short"}), revenue, key };
+      });
+      const max = Math.max(...days.map(day => day.revenue), 1);
+      $("sales-chart").innerHTML = `<div class="chart-bars">${days.map(day => `<div class="chart-column"><div class="chart-value">${day.revenue ? escapeHtml(money(day.revenue)) : ""}</div><div class="chart-track"><div class="chart-bar" style="height:${Math.max(day.revenue ? 5 : 0, day.revenue/max*100)}%" title="${escapeHtml(money(day.revenue))}"></div></div><span class="chart-label">${day.label}</span></div>`).join("")}</div><div class="chart-total"><span>7-day paid revenue</span><strong>${money(days.reduce((sum, day) => sum + day.revenue, 0))}</strong></div>`;
+    }
+    function renderStatusSummary(orders) {
+      const counts = { pending:0, processing:0, shipped:0, delivered:0, cancelled:0 };
+      orders.forEach(order => { const status = cleanStatus(order.status); if (status in counts) counts[status]++; });
+      Object.entries(counts).forEach(([status, count]) => { $(`status-${status}`).textContent = count.toLocaleString(); });
+    }
+    function renderLowStock(products) {
+      const low = products.filter(product => product.stock !== undefined && product.stock !== null && Number(product.stock) <= 5)
+        .sort((a,b) => Number(a.stock) - Number(b.stock)).slice(0,5);
+      if (!low.length) {
+        $("low-stock-list").innerHTML = `<div class="inventory-ok"><i class="fa-solid fa-circle-check"></i><span><strong>Inventory looks good</strong><small>No products have 5 or fewer units in stock.</small></span></div>`;
+        return;
+      }
+      $("low-stock-list").innerHTML = low.map(product => `<div class="stock-alert-row"><span class="stock-product-icon"><i class="fa-solid fa-box"></i></span><span class="stock-product-name"><strong>${escapeHtml(product.title || product.name || "Untitled product")}</strong><small>Low stock warning</small></span><span class="stock-quantity">${Math.max(0, Number(product.stock)||0)} left</span></div>`).join("");
+    }
+
+    let stopOrders = null, stopProducts = null;
+    function startDashboard() {
+      stopProducts = onSnapshot(collection(db, "products"), snapshot => {
+        const products = snapshot.docs.map(item => ({ id:item.id, ...item.data() }));
+        $("stat-products").textContent = snapshot.size.toLocaleString();
+        const outOfStock = products.filter(product => Number(product.stock) <= 0).length;
+        $("product-note").textContent = `${outOfStock} out of stock`;
+        renderLowStock(products);
+      }, error => {
+        console.error("Products listener failed:", error);
+        $("stat-products").textContent = "—";
+        $("low-stock-list").innerHTML = `<p class="panel-placeholder error">Unable to load inventory. Check Firestore permissions.</p>`;
+      });
+
+      stopOrders = onSnapshot(collection(db, "orders"), snapshot => {
+        const orders = snapshot.docs.map(item => ({ id:item.id, ...item.data() }));
+        $("stat-orders").textContent = orders.length.toLocaleString();
+        // Revenue includes every order marked paid; refunded/unpaid orders are excluded.
+        const revenue = orders.reduce((sum, order) => sum + (isPaid(order) ? amountOf(order) : 0), 0);
+        $("stat-revenue").textContent = money(revenue);
+        $("stat-pending").textContent = orders.filter(order => cleanStatus(order.status) === "pending").length.toLocaleString();
+        $("order-note").textContent = `${orders.filter(isPaid).length} paid orders`;
+        renderStatusSummary(orders);
+        renderSalesChart(orders);
+        renderRecentOrders(orders);
+      }, error => {
+        console.error("Orders listener failed:", error);
+        ["stat-orders", "stat-revenue", "stat-pending"].forEach(id => $(id).textContent = "—");
+        ["status-pending", "status-processing", "status-shipped", "status-delivered", "status-cancelled"].forEach(id => $(id).textContent = "—");
+        $("sales-chart").innerHTML = `<p class="chart-empty error">Could not load sales data. Check administrator permissions.</p>`;
+        tableMessage("Could not load orders. Check your connection and administrator permissions.", true);
+      });
+    }
+
+    // Small dashboard utilities: date chip, searchable recent orders and responsive sidebar.
+    const dateChip = $("dashboard-date");
+    if (dateChip) dateChip.innerHTML = `<i class="fa-regular fa-calendar"></i> ${new Date().toLocaleDateString("en-GB", { weekday:"long", day:"2-digit", month:"short", year:"numeric" })}`;
+    $("recent-order-search")?.addEventListener("input", () => renderRecentOrders(allDashboardOrders));
+    const sidebarToggle = $("sidebar-toggle");
+    sidebarToggle?.addEventListener("click", () => {
+      const isOpen = document.body.classList.toggle("sidebar-open");
+      sidebarToggle.setAttribute("aria-expanded", String(isOpen));
+      sidebarToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+    });
+    document.addEventListener("click", event => {
+      if (document.body.classList.contains("sidebar-open") && !event.target.closest(".admin-sidebar") && !event.target.closest(".sidebar-toggle")) {
+        document.body.classList.remove("sidebar-open");
+        sidebarToggle?.setAttribute("aria-expanded", "false");
+        if (sidebarToggle) sidebarToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+      }
+    });
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = "../login.html"; return; }
+      try {
+        const profile = await getDoc(doc(db, "users", user.uid));
+        if (!profile.exists() || profile.data().role !== "admin") {
+          alert("Access denied: administrator account required.");
+          await signOut(auth);
+          window.location.href = "../login.html";
+          return;
+        }
+        startDashboard();
+      } catch (error) {
+        console.error("Admin verification failed:", error);
+        tableMessage("Unable to verify administrator access. Please sign in again.", true);
+      }
+    });
+    window.addEventListener("beforeunload", () => { if (stopOrders) stopOrders(); if (stopProducts) stopProducts(); });
+  </script>
+  <script src="../assets/js/pro-upgrade.js" defer></script>
+<script type="module" src="../assets/js/mobile-nav.js"></script>
+</body>
+</html>

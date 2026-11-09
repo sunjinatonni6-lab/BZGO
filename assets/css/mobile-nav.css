@@ -1,0 +1,28 @@
+
+/* BazarGo role-aware mobile bottom navigation */
+.bazargo-mobile-bottom-nav{display:none}
+@media(max-width:767px){
+  /* Keep only the auth/profile control in storefront top headers. */
+  body:not(:has(.admin-sidebar)) header .nav-actions > :not(#auth-nav-slot):not(.auth-nav-slot),
+  body:not(:has(.admin-sidebar)) header .nav-actions > a:not([href*="login"]):not([href*="account"]),
+  body:not(:has(.admin-sidebar)) header .nav-actions > button:not(#logout-btn){display:none!important}
+  body:not(:has(.admin-sidebar)) header .nav-search{display:none!important}
+  body:not(:has(.admin-sidebar)) header .nav-container{justify-content:space-between}
+  .bazargo-mobile-bottom-nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:9999;
+    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    padding:7px 4px calc(7px + env(safe-area-inset-bottom));
+    background:var(--white,#fff);border-top:1px solid var(--border,#e2e8f0);
+    box-shadow:0 -4px 18px rgba(15,23,42,.08);
+  }
+  .bazargo-mobile-bottom-nav a{
+    min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:4px;padding:5px 1px;color:var(--text-muted,#64748b);text-decoration:none;
+    font-size:clamp(9px,2.7vw,11px);line-height:1.15;font-weight:600;text-align:center;
+    border-radius:8px;transition:color .18s ease,background .18s ease;
+  }
+  .bazargo-mobile-bottom-nav a i{font-size:18px;line-height:1}
+  .bazargo-mobile-bottom-nav a.active{color:var(--primary,#ea580c);background:rgba(234,88,12,.08)}
+  body.has-mobile-bottom-nav{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+  body:has(.admin-sidebar).has-mobile-bottom-nav{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+}

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BazarGo Admin - Orders</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="stylesheet" href="../assets/css/admin-responsive.css">
+  <link rel="stylesheet" href="../assets/css/pro-upgrade.css">
+<link rel="stylesheet" href="../assets/css/mobile-nav.css">
+</head>
+<body>
+  <aside class="admin-sidebar">
+    <h2>BazarGo Admin</h2>
+    <nav class="admin-nav">
+      <a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      <a href="products.html"><i class="fa-solid fa-box"></i> Products</a>
+      <a href="orders.html" class="active"><i class="fa-solid fa-truck"></i> Orders</a>
+      <a href="../index.html"><i class="fa-solid fa-store"></i> Storefront</a>
+      <a href="#" id="admin-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+    </nav>
+  </aside>
+
+  <main class="admin-content">
+    <h1 style="margin-bottom:2rem;">Customer Orders</h1>
+    <div class="orders-panel">
+      <div class="orders-table-wrap">
+      <table class="orders-table">
+        <thead>
+          <tr style="text-align:left; border-bottom:2px solid var(--border);">
+            <th style="padding:0.75rem;">ID</th>
+            <th style="padding:0.75rem;">Customer</th>
+            <th style="padding:0.75rem;">Order Date</th>
+            <th style="padding:0.75rem;">Items</th>
+            <th style="padding:0.75rem;">Total</th>
+            <th style="padding:0.75rem;">Order Status</th>
+            <th style="padding:0.75rem;">Payment Status</th>
+            <th style="padding:0.75rem;">Update Order</th>
+          </tr>
+        </thead>
+        <tbody id="orders-table-rows">
+          <tr><td colspan="8" style="text-align:center; padding:1.5rem;">Loading orders...</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { db } from "../assets/js/firebase-config.js";
+    import { requireAdminGuard, logoutUser } from "../assets/js/auth.js";
+    import { collection, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    requireAdminGuard();
+    document.getElementById("admin-logout").addEventListener("click", logoutUser);
+
+    function renderOrders(snap) {
+      const tbody = document.getElementById("orders-table-rows");
+      
+      if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:1.5rem;">No customer orders found yet.</td></tr>`;
+        return;
+      }
+
+      const dateValue = (o) => {
+        const raw = o.createdAt ?? o.created_at ?? o.orderDate ?? o.date ?? o.timestamp ?? null;
+        if (raw && typeof raw.toDate === "function") return raw.toDate();
+        if (raw && typeof raw.seconds === "number") return new Date(raw.seconds * 1000);
+        if (typeof raw === "number") return new Date(raw);
+        if (typeof raw === "string") { const parsed = new Date(raw); if (!Number.isNaN(parsed.getTime())) return parsed; }
+        return null;
+      };
+      const sortedDocs = [...snap.docs].sort((a, b) => {
+        const da = dateValue(a.data())?.getTime() ?? 0;
+        const db = dateValue(b.data())?.getTime() ?? 0;
+        return db - da;
+      });
+
+      tbody.innerHTML = sortedDocs.map(d => {
+        const o = d.data();
+        const created = dateValue(o);
+        const dateText = created ? created.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "Date unavailable";
+        return `
+          <tr>
+            <td data-label="ID" class="order-id">${d.id.substring(0,8)}</td>
+            <td data-label="Customer">
+              <strong>${o.customer?.name || "N/A"}</strong><br>
+              <small>${o.customer?.phone || ""}</small>
+            </td>
+            <td data-label="Order Date" class="order-date">${dateText}</td>
+            <td data-label="Items">${o.items?.map(i => `${i.title} (x${i.quantity})`).join(", ") || "No items"}</td>
+            <td data-label="Total">${Number(o.total || 0).toLocaleString()} BDT</td>
+            <td data-label="Order Status"><strong>${(o.status || 'pending').toUpperCase()}</strong></td>
+            <td data-label="Payment Status"><strong>${String(o.paymentStatus || "unpaid").toUpperCase()}</strong></td>
+            <td data-label="Update Order" class="order-actions">
+              <select class="status-select" data-id="${d.id}" aria-label="Order status" style="padding:0.4rem; border-radius:4px; border:1px solid var(--border);">
+                <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="processing" ${o.status === "processing" ? "selected" : ""}>Processing</option>
+                <option value="shipped" ${o.status === "shipped" ? "selected" : ""}>Shipped</option>
+                <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
+                <option value="cancelled" ${o.status === "cancelled" ? "selected" : ""}>Cancelled</option>
+              </select>
+              <select class="payment-select" data-id="${d.id}" aria-label="Payment status" style="padding:0.4rem; border-radius:4px; border:1px solid var(--border);">
+                <option value="unpaid" ${!["paid", "refunded"].includes(String(o.paymentStatus || "").toLowerCase()) ? "selected" : ""}>Unpaid</option>
+                <option value="paid" ${String(o.paymentStatus || "").toLowerCase() === "paid" ? "selected" : ""}>Paid</option>
+                <option value="refunded" ${String(o.paymentStatus || "").toLowerCase() === "refunded" ? "selected" : ""}>Refunded</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".status-select").forEach(sel => {
+        sel.addEventListener("change", async (e) => {
+          const select = e.target;
+          select.disabled = true;
+          try {
+            await updateDoc(doc(db, "orders", select.dataset.id), { status: select.value });
+          } catch (error) {
+            console.error("Failed to update order status:", error);
+            alert("Could not update order status. Please check administrator permissions and try again.");
+            select.disabled = false;
+          }
+        });
+      });
+
+      document.querySelectorAll(".payment-select").forEach(sel => {
+        sel.addEventListener("change", async (e) => {
+          const select = e.target;
+          const paymentStatus = select.value;
+          const row = select.closest("tr");
+          const orderStatus = row?.querySelector(".status-select")?.value;
+          if (paymentStatus === "paid" && !["delivered", "completed"].includes(String(orderStatus).toLowerCase())) {
+            const confirmed = confirm("This order is not marked delivered. Confirm that payment has actually been received?");
+            if (!confirmed) {
+              select.value = "unpaid";
+              return;
+            }
+          }
+          select.disabled = true;
+          try {
+            await updateDoc(doc(db, "orders", select.dataset.id), { paymentStatus });
+          } catch (error) {
+            console.error("Failed to update payment status:", error);
+            alert("Could not update payment status. Please check administrator permissions and try again.");
+            select.disabled = false;
+          }
+        });
+      });
+    }
+
+    const unsubscribeOrders = onSnapshot(collection(db, "orders"), renderOrders, (error) => {
+      console.error("Live order sync failed:", error);
+      document.getElementById("orders-table-rows").innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1.5rem">Could not load orders. Check connection and Firestore permissions.</td></tr>';
+    });
+    window.addEventListener("beforeunload", () => unsubscribeOrders());
+  </script>
+  <script src="../assets/js/pro-upgrade.js" defer></script>
+<script type="module" src="../assets/js/mobile-nav.js"></script>
+</body>
+</html>

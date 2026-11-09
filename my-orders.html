@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BazarGo - My Orders</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+  <link rel="stylesheet" href="assets/css/pro-upgrade.css">
+<link rel="stylesheet" href="assets/css/mobile-nav.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">BazarGo</a>
+      <div class="nav-actions">
+        <a href="index.html"><i class="fa-solid fa-store"></i> Store</a>
+        <a href="account.html"><i class="fa-regular fa-user"></i> My Profile</a>
+        <a href="cart.html"><i class="fa-solid fa-cart-shopping"></i> Cart (<span id="cart-count">0</span>)</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h2 class="section-title" style="margin-bottom: 0;">Order History</h2>
+      <a href="index.html" class="btn btn-outline" style="color: var(--dark); border-color: var(--border);">
+        <i class="fa-solid fa-arrow-left"></i> Continue Shopping
+      </a>
+    </div>
+
+    <div id="orders-feedback" role="status" aria-live="polite" style="display:none; margin-bottom:1rem; padding:0.85rem 1rem; border-radius:8px;"></div>
+
+    <!-- Orders Container -->
+    <div id="orders-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <div id="orders-loading" style="text-align: center; padding: 3rem; color: var(--text-muted); background: var(--white); border-radius: 8px; border: 1px solid var(--border);">
+        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top: 1rem;">Loading your orders...</p>
+      </div>
+      <div id="orders-empty" style="display: none; text-align: center; padding: 3rem; background: var(--white); border-radius: 8px; border: 1px solid var(--border);">
+        <i class="fa-solid fa-box-open fa-3x" style="color: #cbd5e1; margin-bottom: 1rem;"></i>
+        <h3 style="color: var(--dark); margin-bottom: 0.5rem;">No Orders Found</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">You haven't placed any orders with BazarGo yet.</p>
+        <a href="index.html" class="btn btn-primary">Start Shopping</a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./assets/js/firebase-config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { updateCartBadge } from "./assets/js/cart.js";
+
+    updateCartBadge();
+
+    const ordersContainer = document.getElementById("orders-container");
+    const loadingEl = document.getElementById("orders-loading");
+    const emptyEl = document.getElementById("orders-empty");
+
+    function getStatusBadge(status) {
+      const colors = {
+        pending: { bg: '#fef3c7', text: '#d97706' },
+        processing: { bg: '#e0e7ff', text: '#4338ca' },
+        shipped: { bg: '#e0f2fe', text: '#0284c7' },
+        delivered: { bg: '#dcfce7', text: '#15803d' },
+        cancelled: { bg: '#fee2e2', text: '#b91c1c' }
+      };
+      const s = (status || 'pending').toLowerCase();
+      const style = colors[s] || colors.pending;
+      return `<span style="background: ${style.bg}; color: ${style.text}; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">${s}</span>`;
+    }
+
+    const feedbackEl = document.getElementById("orders-feedback");
+    let currentUser = null;
+    let currentOrders = [];
+
+    function showFeedback(message, isError = false) {
+      feedbackEl.textContent = message;
+      feedbackEl.style.display = "block";
+      feedbackEl.style.background = isError ? "#fee2e2" : "#dcfce7";
+      feedbackEl.style.color = isError ? "#991b1b" : "#166534";
+      feedbackEl.style.border = `1px solid ${isError ? "#fca5a5" : "#86efac"}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>\"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
+    }
+
+    function renderOrders() {
+      if (!currentOrders.length) {
+        emptyEl.style.display = "block";
+        return;
+      }
+      emptyEl.style.display = "none";
+      ordersContainer.innerHTML = currentOrders.map(order => {
+        const status = String(order.status || "pending").trim().toLowerCase();
+        const canCancel = status === "pending";
+        return `
+          <div style="background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Order ID:</span>
+                <span style="font-family: monospace; font-weight: 700; color: var(--dark); margin-left: 4px;">#${escapeHtml(order.id)}</span>
+              </div>
+              <div>${getStatusBadge(status)}</div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--dark);">Purchased Items</h4>
+              <ul style="list-style: none; padding-left: 0;">
+                ${(order.items || []).map(i => `
+                  <li style="display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px dashed #f1f5f9; font-size: 0.9rem;">
+                    <span>${escapeHtml(i.title)} <strong style="color: var(--primary);">x${escapeHtml(i.quantity)}</strong></span>
+                    <span>${(Number(i.price) * Number(i.quantity)).toLocaleString()} BDT</span>
+                  </li>
+                `).join("")}
+              </ul>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 0.5rem; border-top: 1px solid var(--border); font-size: 0.9rem; flex-wrap:wrap; gap:1rem;">
+              <div style="color: var(--text-muted); font-size: 0.85rem;">
+                Payment: <strong>${escapeHtml(order.paymentMethod || 'COD')}</strong><br>
+                Delivery To: ${escapeHtml(order.customer?.address || 'N/A')}
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Total Amount</span>
+                <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">${Number(order.total || 0).toLocaleString()} BDT</div>
+                ${canCancel ? `<button type="button" class="btn btn-outline cancel-order-btn" data-order-id="${escapeHtml(order.id)}" style="margin-top:0.75rem; border-color:#dc2626; color:#b91c1c;" aria-label="Cancel order ${escapeHtml(order.id)}"><i class="fa-solid fa-ban"></i> Cancel Order</button>` : ""}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    ordersContainer.addEventListener("click", async (event) => {
+      const button = event.target.closest(".cancel-order-btn");
+      if (!button || !currentUser) return;
+      const orderId = button.dataset.orderId;
+      const order = currentOrders.find(item => item.id === orderId);
+      if (!order || String(order.status || "pending").trim().toLowerCase() !== "pending") {
+        showFeedback("Only pending orders can be cancelled.", true);
+        return;
+      }
+      if (!confirm(`Are you sure you want to cancel order #${orderId}? This action cannot be undone.`)) return;
+
+      button.disabled = true;
+      button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cancelling...';
+      try {
+        // Firestore rules independently verify ownership and allow only status-only pending -> cancelled updates.
+        // Keep the customer update limited to the status field so it matches
+        // the least-privilege Firestore rule exactly.
+        await updateDoc(doc(db, "orders", orderId), {
+          status: "cancelled"
+        });
+        currentOrders = currentOrders.map(item => item.id === orderId ? { ...item, status: "cancelled" } : item);
+        renderOrders();
+        showFeedback("Your order has been cancelled successfully.");
+      } catch (error) {
+        console.error("Failed to cancel order:", error);
+        showFeedback(error.code === "permission-denied"
+          ? "Firebase denied this cancellation. Confirm the latest firestore.rules are published in Firebase Console, then refresh and try again. The order must belong to your account and still be pending."
+          : error.code === "unavailable" || error.code === "deadline-exceeded"
+            ? "Firebase is temporarily unavailable. Check your connection and try again."
+            : "Could not cancel your order (" + (error.code || "unknown error") + "). Please try again; if it continues, check the browser console.", true);
+        button.disabled = false;
+        button.innerHTML = '<i class="fa-solid fa-ban"></i> Cancel Order';
+      }
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = user;
+      try {
+        const q = query(collection(db, "orders"), where("userId", "==", user.uid));
+        if (window.__bazargoOrdersUnsubscribe) window.__bazargoOrdersUnsubscribe();
+        window.__bazargoOrdersUnsubscribe = onSnapshot(q, (snap) => {
+          loadingEl.style.display = "none";
+          currentOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          currentOrders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+          renderOrders();
+        }, (err) => {
+          loadingEl.style.display = "none";
+          console.error("Error listening to customer orders:", err);
+          ordersContainer.innerHTML = '<div role="alert" style="color:var(--danger);text-align:center;padding:2rem">Could not sync your orders. Please check your connection and try again.</div>';
+        });
+      } catch (err) {
+        loadingEl.style.display = "none";
+        ordersContainer.innerHTML = `<div style="color: var(--danger); text-align: center; padding: 2rem;">Error fetching orders. Please refresh and try again.</div>`;
+        console.error("Error fetching customer orders:", err);
+      }
+    });
+  </script>
+  <script src="assets/js/pro-upgrade.js" defer></script>
+<script type="module" src="assets/js/mobile-nav.js"></script>
+</body>
+</html>

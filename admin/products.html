@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Products - BazarGo Admin</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="../assets/css/pages/products-admin.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="stylesheet" href="../assets/css/admin-responsive.css">
+  <link rel="stylesheet" href="../assets/css/pro-upgrade.css">
+<link rel="stylesheet" href="../assets/css/mobile-nav.css">
+</head>
+<body>
+
+  <aside class="admin-sidebar">
+    <a href="dashboard.html" class="sidebar-brand">
+      <i class="fa-solid fa-boxes-stacked"></i> Bazar<span>Go</span> Admin
+    </a>
+    <ul class="sidebar-menu">
+      <li>
+        <a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      </li>
+      <li>
+        <a href="products.html" class="active"><i class="fa-solid fa-layer-group"></i> Products</a>
+      </li>
+      <li>
+        <a href="orders.html"><i class="fa-solid fa-clipboard-list"></i> Orders</a>
+      </li>
+      <li>
+        <a href="banner.html"><i class="fa-solid fa-image"></i> Hero Banner</a>
+      </li>
+      <li>
+        <a href="../index.html" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Live Storefront</a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <a href="../login.html"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <h2>Products Inventory</h2>
+      <span style="font-size: 0.9rem; color: var(--slate);"><i class="fa-solid fa-user-shield"></i> Administrator</span>
+    </header>
+
+    <main class="admin-content">
+      <div class="page-header">
+        <div>
+          <h3>Product Catalog</h3>
+          <p style="color: var(--slate); font-size: 0.9rem;">Add, edit, and organize storefront inventory items and ratings.</p>
+        </div>
+      </div>
+
+      <section class="card">
+        <h4 id="form-title" style="margin-bottom: 1rem;"><i class="fa-solid fa-circle-plus"></i> Add New Product</h4>
+        <form id="product-form">
+          <input type="hidden" id="edit-product-id">
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="product-title">Product Title / Name *</label>
+              <input type="text" id="product-title" required placeholder="e.g. Wireless Headphones">
+            </div>
+
+            <div class="form-group">
+              <label for="product-price">Price (BDT) *</label>
+              <input type="number" id="product-price" required min="0" placeholder="e.g. 2500">
+            </div>
+
+            <div class="form-group">
+              <label for="product-stock">Available Stock Quantity *</label>
+              <input type="number" id="product-stock" required min="0" value="10" placeholder="e.g. 20">
+            </div>
+
+            <div class="form-group">
+              <label for="product-category">Category</label>
+              <select id="product-category" required>
+                <option value="Fashion & Clothing">Fashion &amp; Clothing</option>
+                <option value="Jewellery & Accessories">Jewellery &amp; Accessories</option>
+                <option value="Beauty & Skincare">Beauty &amp; Skincare</option>
+                <option value="Electronics & Accessories" selected>Electronics &amp; Accessories</option>
+                <option value="Home & Kitchen">Home &amp; Kitchen</option>
+                <option value="Stationery & Student Essentials">Stationery &amp; Student Essentials</option>
+                <option value="Bags & Lifestyle">Bags &amp; Lifestyle</option>
+                <option value="Food & Snacks">Food &amp; Snacks</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="product-rating">Initial Rating (1.0 - 5.0)</label>
+              <input type="number" id="product-rating" step="0.1" min="1" max="5" value="5.0" placeholder="5.0">
+            </div>
+
+            <div class="form-group">
+              <label for="product-image">Image URL or Path *</label>
+              <input type="text" id="product-image" required placeholder="e.g. assets/images/sample1.jpg or https://...">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label for="product-desc">Short Description</label>
+            <textarea id="product-desc" rows="2" placeholder="Brief details about warranty, features, or materials..."></textarea>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem;">
+            <button type="submit" class="btn btn-primary" id="save-btn">
+              <i class="fa-solid fa-save"></i> Save Product
+            </button>
+            <button type="button" class="btn btn-outline" id="cancel-btn" style="display: none;">
+              Cancel Edit
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h4>Inventory List (<span id="total-count">0</span>)</h4>
+          <input type="text" id="table-search" placeholder="Search table..." style="padding: 0.4rem 0.8rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem;">
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Rating</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="product-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { db } from "../assets/js/firebase-config.js";
+    import { 
+      collection, 
+      getDocs, onSnapshot,
+      doc, 
+      setDoc, 
+      updateDoc, 
+      deleteDoc, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { requireAdminGuard } from "../assets/js/auth.js";
+
+    requireAdminGuard();
+
+    const PRODUCTS_KEY = "bazargo_products";
+
+    const initialFallback = [
+      { id: "101", title: "Wireless Headphones", price: 2500, stock: 25, category: "Electronics & Accessories", imageUrl: "assets/images/sample1.jpg", rating: 4.8, reviewCount: 42, description: "High-grade audio clarity." },
+      { id: "102", title: "Smart Fitness Watch", price: 1800, stock: 15, category: "Electronics & Accessories", imageUrl: "assets/images/sample2.jpg", rating: 4.5, reviewCount: 29, description: "All-day heart rate & step tracking." },
+      { id: "103", title: "Smart Phone Pro", price: 170000, stock: 8, category: "Electronics & Accessories", imageUrl: "assets/images/sample3.jpg", rating: 4.9, reviewCount: 88, description: "Flagship performance and camera." },
+      { id: "104", title: "Fast Phone Charger", price: 1800, stock: 30, category: "Electronics & Accessories", imageUrl: "assets/images/sample4.jpg", rating: 4.2, reviewCount: 16, description: "Fast delivery USB-C adapter." }
+    ];
+
+    async function loadFirestoreProducts() {
+      try {
+        const snap = await getDocs(collection(db, "products"));
+        if (!snap.empty) {
+          const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          localStorage.setItem(PRODUCTS_KEY, JSON.stringify(list));
+          return list;
+        }
+      } catch (e) {
+        console.warn("Could not fetch remote products, fallback to localStorage:", e);
+      }
+      return getLocalProducts();
+    }
+
+    let liveProducts = [];
+    let unsubscribeProducts = onSnapshot(collection(db, "products"), (snap) => {
+      liveProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(liveProducts));
+      renderTable(document.getElementById("table-search")?.value || "", liveProducts);
+    }, (error) => {
+      console.error("Live inventory sync failed:", error);
+      const tbody = document.getElementById("product-table-body");
+      if (tbody && !liveProducts.length) tbody.innerHTML = '<tr><td colspan="7">Could not load inventory from Firebase. Check permissions and connection.</td></tr>';
+    });
+    window.addEventListener("beforeunload", () => unsubscribeProducts && unsubscribeProducts());
+
+    function getLocalProducts() {
+      const stored = localStorage.getItem(PRODUCTS_KEY);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          return initialFallback;
+        }
+      }
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(initialFallback));
+      return initialFallback;
+    }
+
+    function saveLocalProducts(products) {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+      renderTable();
+    }
+
+    async function renderTable(filterQuery = "", sourceProducts = liveProducts) {
+      const tbody = document.getElementById("product-table-body");
+      const products = sourceProducts;
+      document.getElementById("total-count").textContent = products.length;
+
+      const filtered = products.filter(p => 
+        (p.title || "").toLowerCase().includes(filterQuery.toLowerCase()) ||
+        (p.category || "").toLowerCase().includes(filterQuery.toLowerCase())
+      );
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--slate); padding: 2rem;">
+              No products found in inventory.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(p => {
+        const imgPath = p.imageUrl && !p.imageUrl.startsWith("http") && !p.imageUrl.startsWith("../") 
+          ? `../${p.imageUrl}` 
+          : (p.imageUrl || "https://via.placeholder.com/60");
+
+        const ratingVal = p.rating ? Number(p.rating).toFixed(1) : "5.0";
+        const reviewCount = p.reviewCount || 0;
+        const stockQty = p.stock !== undefined && p.stock !== null ? Number(p.stock) : "N/A";
+        const isOutOfStock = stockQty !== "N/A" && stockQty <= 0;
+
+        return `
+          <tr>
+            <td data-label="Image">
+              <img src="${imgPath}" alt="${p.title}" class="product-thumb" onerror="this.src='https://via.placeholder.com/60?text=No+Img'">
+            </td>
+            <td data-label="Title" class="product-title-cell">
+              <strong>${p.title || "Untitled Product"}</strong>
+            </td>
+            <td data-label="Category"><span style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${p.category || "General"}</span></td>
+            <td data-label="Price"><strong>${Number(p.price).toLocaleString()} BDT</strong></td>
+            <td data-label="Stock">
+              <span class="stock-badge ${isOutOfStock ? 'stock-out' : 'stock-in'}">
+                ${isOutOfStock ? 'Out of Stock (0)' : (stockQty === "N/A" ? 'Unset' : `${stockQty} in stock`)}
+              </span>
+            </td>
+            <td data-label="Rating">
+              <span class="rating-badge">
+                <i class="fa-solid fa-star"></i> ${ratingVal} (${reviewCount})
+              </span>
+            </td>
+            <td data-label="Actions" class="product-actions-cell">
+              <button class="btn btn-edit" data-id="${p.id}">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+              </button>
+              <button class="btn btn-danger" data-id="${p.id}">
+                <i class="fa-solid fa-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      tbody.querySelectorAll(".btn-edit").forEach(b => {
+        b.addEventListener("click", () => editProduct(b.dataset.id));
+      });
+      tbody.querySelectorAll(".btn-danger").forEach(b => {
+        b.addEventListener("click", () => deleteProduct(b.dataset.id));
+      });
+    }
+
+    const productForm = document.getElementById("product-form");
+    productForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const editId = document.getElementById("edit-product-id").value;
+      const title = document.getElementById("product-title").value.trim();
+      const price = parseFloat(document.getElementById("product-price").value) || 0;
+      const stock = parseInt(document.getElementById("product-stock").value, 10);
+      const category = document.getElementById("product-category").value;
+      const rating = parseFloat(document.getElementById("product-rating").value) || 5.0;
+      let imageUrl = document.getElementById("product-image").value.trim();
+      const description = document.getElementById("product-desc").value.trim();
+
+      if (isNaN(stock) || stock < 0) {
+        alert("Stock quantity must be a valid non-negative number.");
+        return;
+      }
+
+      if (imageUrl.startsWith("../")) {
+        imageUrl = imageUrl.replace("../", "");
+      }
+
+      let products = [...liveProducts];
+
+      if (editId) {
+        products = products.map(p => {
+          if (String(p.id) === String(editId)) {
+            return { 
+              ...p, 
+              title, 
+              price, 
+              stock,
+              category, 
+              imageUrl, 
+              rating,
+              description 
+            };
+          }
+          return p;
+        });
+
+        // Sync with Firestore
+        try {
+          await updateDoc(doc(db, "products", String(editId)), {
+            title,
+            price,
+            stock,
+            category,
+            imageUrl,
+            rating,
+            description,
+            updatedAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Firestore product update failed:", err);
+          alert("Product was not saved to Firebase. Check your connection and Firestore permissions.");
+          return;
+        }
+
+        alert(`Product "${title}" updated successfully!`);
+      } else {
+        const newId = "prod_" + Date.now();
+        const newProd = {
+          id: newId,
+          title,
+          price,
+          stock,
+          category,
+          imageUrl,
+          rating,
+          reviewCount: 1,
+          description,
+          isPublished: true,
+          createdAt: new Date().toISOString()
+        };
+        products.unshift(newProd);
+
+        // Sync with Firestore
+        try {
+          await setDoc(doc(db, "products", newId), {
+            ...newProd,
+            createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Firestore product creation failed:", err);
+          alert("Product was not saved to Firebase. Check your connection and Firestore permissions.");
+          return;
+        }
+
+        alert(`Product "${title}" added with stock ${stock}!`);
+      }
+
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+      resetForm();
+    });
+
+    function editProduct(id) {
+      const products = liveProducts;
+      const item = products.find(p => String(p.id) === String(id));
+      if (!item) return;
+
+      document.getElementById("edit-product-id").value = item.id;
+      document.getElementById("product-title").value = item.title;
+      document.getElementById("product-price").value = item.price;
+      document.getElementById("product-stock").value = item.stock !== undefined ? item.stock : 0;
+      const categorySelect = document.getElementById("product-category");
+      const availableCategory = [...categorySelect.options].some(option => option.value === item.category);
+      categorySelect.value = availableCategory ? item.category : "Electronics & Accessories";
+      document.getElementById("product-rating").value = item.rating || 5.0;
+      document.getElementById("product-image").value = item.imageUrl || "";
+      document.getElementById("product-desc").value = item.description || "";
+
+      document.getElementById("form-title").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Product: ${item.title}`;
+      document.getElementById("save-btn").innerHTML = `<i class="fa-solid fa-check"></i> Update Product`;
+      document.getElementById("cancel-btn").style.display = "inline-flex";
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteProduct(id) {
+      const target = liveProducts.find(p => String(p.id) === String(id));
+      if (!confirm(`Are you sure you want to delete "${target ? target.title : 'this product'}"?`)) return;
+      try {
+        await deleteDoc(doc(db, "products", String(id)));
+        resetForm();
+      } catch (err) {
+        console.error("Could not delete from Firestore:", err);
+        alert("Product was not deleted from Firebase. Check permissions and try again.");
+      }
+    }
+
+    function resetForm() {
+      productForm.reset();
+      document.getElementById("edit-product-id").value = "";
+      document.getElementById("product-rating").value = "5.0";
+      document.getElementById("product-stock").value = "10";
+      document.getElementById("form-title").innerHTML = `<i class="fa-solid fa-circle-plus"></i> Add New Product`;
+      document.getElementById("save-btn").innerHTML = `<i class="fa-solid fa-save"></i> Save Product`;
+      document.getElementById("cancel-btn").style.display = "none";
+    }
+
+    document.getElementById("cancel-btn").addEventListener("click", resetForm);
+
+    document.getElementById("table-search").addEventListener("input", (e) => {
+      renderTable(e.target.value.trim());
+    });
+
+    renderTable();
+  </script>
+  <script src="../assets/js/pro-upgrade.js" defer></script>
+<script type="module" src="../assets/js/mobile-nav.js"></script>
+</body>
+</html>

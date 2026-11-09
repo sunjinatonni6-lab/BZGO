@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BazarGo - Checkout</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+  <link rel="stylesheet" href="assets/css/pro-upgrade.css">
+<link rel="stylesheet" href="assets/css/mobile-nav.css">
+</head>
+<body>
+  <div class="auth-container" style="max-width:650px;">
+    <h2 style="margin-bottom:1.5rem;">Shipping & Delivery Details</h2>
+    <div id="checkout-error" style="display:none; background:#fee2e2; border:1px solid #f87171; color:#b91c1c; padding:0.75rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem;"></div>
+    <form id="checkout-form">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="cust-name" required placeholder="Rahim Ahmed">
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="cust-phone" required placeholder="+880 1700-000000">
+      </div>
+      <div class="form-group">
+        <label>Delivery Address</label>
+        <textarea id="cust-address" required rows="3" placeholder="House, Road, Area, City"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Payment Method</label>
+        <select id="payment-method">
+          <option value="COD">Cash on Delivery (COD)</option>
+        </select>
+      </div>
+      <button type="submit" id="order-submit-btn" class="btn btn-primary" style="width:100%; justify-content:center;">Place Order Now</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./assets/js/firebase-config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { 
+      collection, 
+      doc, 
+      runTransaction, 
+      serverTimestamp,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { fetchCartItems } from "./assets/js/cart.js";
+
+    const errorBox = document.getElementById("checkout-error");
+
+    // Guard: Require customer login before accessing checkout
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("Please sign in or create an account to place your order.");
+        window.location.href = `login.html?redirect=checkout.html&msg=${encodeURIComponent("Please sign in or create an account to place your order.")}`;
+        return;
+      }
+
+      // Pre-fill user profile info if available
+      try {
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          if (data.fullName && !document.getElementById("cust-name").value) {
+            document.getElementById("cust-name").value = data.fullName;
+          }
+          if (data.phone && !document.getElementById("cust-phone").value) {
+            document.getElementById("cust-phone").value = data.phone;
+          }
+          if (data.address && !document.getElementById("cust-address").value) {
+            document.getElementById("cust-address").value = data.address;
+          }
+        }
+      } catch (e) {
+        console.warn("Could not load user profile:", e);
+      }
+    });
+
+    document.getElementById("checkout-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorBox.style.display = "none";
+      const btn = document.getElementById("order-submit-btn");
+      btn.disabled = true;
+      btn.textContent = "Processing Order...";
+
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        alert("Please sign in or create an account to place your order.");
+        window.location.href = `login.html?redirect=checkout.html&msg=${encodeURIComponent("Please sign in or create an account to place your order.")}`;
+        return;
+      }
+
+      const items = await fetchCartItems();
+      if (!items || items.length === 0) {
+        alert("Your cart is empty.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      const subtotal = items.reduce((sum, i) => sum + ((Number(i.price) || 0) * (Number(i.quantity) || 1)), 0);
+      const shippingCost = 60;
+      const total = subtotal + shippingCost;
+
+      const orderPayload = {
+        userId: currentUser.uid,
+        customer: {
+          name: document.getElementById("cust-name").value.trim(),
+          phone: document.getElementById("cust-phone").value.trim(),
+          address: document.getElementById("cust-address").value.trim()
+        },
+        items: items.map(i => ({
+          productId: String(i.productId || i.id),
+          title: i.title,
+          price: Number(i.price) || 0,
+          quantity: Number(i.quantity) || 1
+        })),
+        subtotal,
+        shippingCost,
+        total,
+        paymentMethod: "COD",
+        status: "pending",
+        stockRestored: false,
+        createdAt: serverTimestamp()
+      };
+
+      try {
+        // Atomic transaction: verify stock, decrement stock, and place order
+        let newOrderId = "";
+        await runTransaction(db, async (transaction) => {
+          const productDocs = [];
+
+          // 1. Read all products in the cart
+          for (const item of items) {
+            const pId = String(item.productId || item.id);
+            const pRef = doc(db, "products", pId);
+            const pSnap = await transaction.get(pRef);
+
+            if (pSnap.exists()) {
+              const pData = pSnap.data();
+              // Check stock if product has managed stock field
+              if (pData.stock !== undefined && pData.stock !== null) {
+                const currentStock = Number(pData.stock);
+                const reqQty = Number(item.quantity) || 1;
+                if (currentStock < reqQty) {
+                  throw new Error(`Insufficient stock for "${item.title}". Only ${currentStock} item(s) available.`);
+                }
+                productDocs.push({ ref: pRef, newStock: currentStock - reqQty });
+              }
+            }
+          }
+
+          // 2. Perform stock deductions
+          for (const p of productDocs) {
+            transaction.update(p.ref, { stock: p.newStock });
+          }
+
+          // 3. Write order document
+          const ordersRef = collection(db, "orders");
+          const newDocRef = doc(ordersRef);
+          newOrderId = newDocRef.id;
+          transaction.set(newDocRef, orderPayload);
+        });
+
+        // Also update local storage product stock if present
+        try {
+          const stored = localStorage.getItem("bazargo_products");
+          if (stored) {
+            let localProds = JSON.parse(stored);
+            items.forEach(i => {
+              const pId = String(i.productId || i.id);
+              const p = localProds.find(item => String(item.id) === pId);
+              if (p && p.stock !== undefined && p.stock !== null) {
+                p.stock = Math.max(0, Number(p.stock) - (Number(i.quantity) || 1));
+              }
+            });
+            localStorage.setItem("bazargo_products", JSON.stringify(localProds));
+          }
+        } catch (e) {
+          console.warn("Local inventory sync skipped:", e);
+        }
+
+        localStorage.removeItem("bazargo_cart");
+        alert(`Order placed successfully! Order ID: ${newOrderId}`);
+        window.location.href = "my-orders.html";
+      } catch (err) {
+        errorBox.textContent = "Order submission error: " + err.message;
+        errorBox.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "Place Order Now";
+      }
+    });
+  </script>
+  <script src="assets/js/pro-upgrade.js" defer></script>
+<script type="module" src="assets/js/mobile-nav.js"></script>
+</body>
+</html>
