@@ -1,0 +1,45 @@
+.qty-control {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f1f5f9;
+      color: var(--dark);
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1rem;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn:hover {
+      background: #e2e8f0;
+    }
+    .qty-input {
+      width: 45px;
+      height: 32px;
+      text-align: center;
+      border: none;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      outline: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    /* Hide number input spinners */
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .qty-input[type=number] {
+      -moz-appearance: textfield;
+    }

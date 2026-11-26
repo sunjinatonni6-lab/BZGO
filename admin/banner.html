@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Hero Banner - BazarGo Admin</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="../assets/css/pages/banner-admin.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="stylesheet" href="../assets/css/admin-responsive.css">
+  <link rel="stylesheet" href="../assets/css/mobile-bottom-nav.css">
+  <link rel="stylesheet" href="../assets/css/admin-mobile-fix.css">
+</head>
+<body>
+
+  <aside class="admin-sidebar">
+    <a href="dashboard.html" class="sidebar-brand">
+      <i class="fa-solid fa-boxes-stacked"></i> Bazar<span>Go</span> Admin
+    </a>
+    <ul class="sidebar-menu">
+      <li>
+        <a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      </li>
+      <li>
+        <a href="products.html"><i class="fa-solid fa-layer-group"></i> Products</a>
+      </li>
+      <li>
+        <a href="orders.html"><i class="fa-solid fa-clipboard-list"></i> Orders</a>
+      </li>
+      <li>
+        <a href="banner.html" class="active"><i class="fa-solid fa-image"></i> Hero Banner</a>
+      </li>
+      <li>
+        <a href="../index.html" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Live Storefront</a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <a href="../login.html"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <h2>Hero Banner Settings</h2>
+      <span style="font-size: 0.9rem; color: var(--slate);"><i class="fa-solid fa-user-shield"></i> Administrator</span>
+    </header>
+
+    <main class="admin-content">
+      <section class="card">
+        <h3 style="margin-bottom: 0.5rem; color: var(--dark);"><i class="fa-solid fa-pen-to-square"></i> Customize Storefront Hero Section</h3>
+        <p style="color: var(--slate); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Any changes saved here will immediately update the promotional hero section on the customer homepage.
+        </p>
+
+        <div class="banner-slide-toolbar" style="max-width:650px; display:flex; gap:.65rem; align-items:center; flex-wrap:wrap; margin-bottom:1rem;">
+          <label for="banner-slide-select">Banner slide</label>
+          <select id="banner-slide-select" style="min-width:180px; padding:.6rem; border:1px solid var(--border); border-radius:6px;"></select>
+          <button type="button" class="btn-save" id="add-banner-slide" style="padding:.6rem 1rem;"> <i class="fa-solid fa-plus"></i> Add Slide</button>
+          <button type="button" id="delete-banner-slide" style="padding:.6rem 1rem; border:1px solid #fecaca; color:#b91c1c; background:#fff; border-radius:6px; cursor:pointer;"> <i class="fa-solid fa-trash"></i> Delete Slide</button>
+        </div>
+        <p style="max-width:650px; color:#64748b; font-size:.82rem; margin:-.45rem 0 1rem;">Add multiple slides here. The storefront automatically rotates through saved slides every 4.5 seconds.</p>
+        <form id="hero-banner-admin-form" style="max-width: 650px;">
+          <div class="form-group">
+            <label for="banner-tag-input">Top Discount Pill / Tag</label>
+            <input type="text" id="banner-tag-input" placeholder="Mega Sale • Up to 50% Off">
+          </div>
+
+          <div class="form-group">
+            <label for="banner-heading-input">Headline (HTML tags supported) *</label>
+            <input type="text" id="banner-heading-input" required placeholder="Smart Online Shopping at <span class='highlight'>BazarGo</span>">
+          </div>
+
+          <div class="form-group">
+            <label for="banner-subtext-input">Subtext / Description *</label>
+            <textarea id="banner-subtext-input" rows="3" required placeholder="Discover millions of premium electronics, everyday essentials, and fashion trends..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="banner-image-input">Banner Visual Image Path or URL *</label>
+            <input type="text" id="banner-image-input" required placeholder="assets/images/sample1.jpg or https://...">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="banner-cta-text">Button Label</label>
+              <input type="text" id="banner-cta-text" placeholder="Shop Now">
+            </div>
+            <div class="form-group">
+              <label for="banner-cta-link">Button Target Link</label>
+              <input type="text" id="banner-cta-link" placeholder="#featured">
+            </div>
+          </div>
+
+          <!-- Live Preview -->
+          <div class="banner-preview-box">
+            <img id="banner-preview" class="banner-preview-img" src="../assets/images/sample1.jpg" alt="Preview" onerror="this.src='https://via.placeholder.com/140x90?text=Preview'">
+            <div>
+              <strong style="font-size: 0.85rem; color: var(--slate);">Current Image Preview</strong>
+              <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">Updates automatically when you change the image path or URL.</p>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem;">
+            <button type="submit" class="btn-save">
+              <i class="fa-solid fa-save"></i> Save Changes to Storefront
+            </button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { db } from "../assets/js/firebase-config.js";
+    import { doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { requireAdminGuard } from "../assets/js/auth.js";
+    requireAdminGuard();
+
+    const BANNER_STORAGE_KEY = "bazargo_hero_banner";
+    const bannerRef = doc(db, "store_settings", "heroBanner");
+    const defaultBanner = {
+      tag: "Mega Sale • Up to 50% Off",
+      title: "Smart Online Shopping at <span class='highlight'>BazarGo</span>",
+      subtitle: "Discover millions of premium electronics, everyday essentials, and fashion trends delivered straight to your door at unbeatable prices.",
+      imageUrl: "assets/images/sample1.jpg", ctaText: "Shop Now", ctaLink: "#featured"
+    };
+    const fields = {
+      tag: document.getElementById("banner-tag-input"),
+      title: document.getElementById("banner-heading-input"),
+      subtitle: document.getElementById("banner-subtext-input"),
+      imageUrl: document.getElementById("banner-image-input"),
+      ctaText: document.getElementById("banner-cta-text"),
+      ctaLink: document.getElementById("banner-cta-link")
+    };
+    const slideSelect = document.getElementById("banner-slide-select");
+    let banners = [{ ...defaultBanner }], activeIndex = 0, loadingRemote = true;
+
+    function readForm() {
+      return Object.fromEntries(Object.entries(fields).map(([key, field]) => [key, field.value.trim()]));
+    }
+    function fillForm(banner = defaultBanner) {
+      Object.entries(fields).forEach(([key, field]) => { field.value = banner[key] || defaultBanner[key] || ""; });
+      updatePreview(banner.imageUrl || defaultBanner.imageUrl);
+    }
+    function updatePreview(url) {
+      if (!url) return;
+      document.getElementById("banner-preview").src =
+        url.startsWith("http") || url.startsWith("../") ? url : `../${url}`;
+    }
+    function refreshSlideSelect() {
+      slideSelect.innerHTML = "";
+      banners.forEach((banner, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = `Slide ${index + 1}${banner.tag ? ` — ${banner.tag}` : ""}`;
+        slideSelect.appendChild(option);
+      });
+      slideSelect.value = String(activeIndex);
+      document.getElementById("delete-banner-slide").disabled = banners.length <= 1;
+      document.getElementById("delete-banner-slide").style.opacity = banners.length <= 1 ? ".5" : "1";
+    }
+    function selectSlide(index) {
+      activeIndex = Math.max(0, Math.min(index, banners.length - 1));
+      refreshSlideSelect();
+      fillForm(banners[activeIndex]);
+    }
+    function normalizeImagePath(value) {
+      return value.startsWith("../") ? value.replace(/^\.\.\//, "") : value;
+    }
+
+    document.getElementById("banner-image-input").addEventListener("input", event => updatePreview(event.target.value.trim()));
+    slideSelect.addEventListener("change", () => {
+      banners[activeIndex] = { ...banners[activeIndex], ...readForm() };
+      selectSlide(Number(slideSelect.value));
+    });
+    document.getElementById("add-banner-slide").addEventListener("click", () => {
+      banners[activeIndex] = { ...banners[activeIndex], ...readForm() };
+      banners.push({ ...defaultBanner, tag: `Promotion ${banners.length + 1}` });
+      selectSlide(banners.length - 1);
+    });
+    document.getElementById("delete-banner-slide").addEventListener("click", () => {
+      if (banners.length <= 1) return;
+      if (!confirm("Delete this banner slide?")) return;
+      banners.splice(activeIndex, 1);
+      selectSlide(Math.min(activeIndex, banners.length - 1));
+    });
+
+    document.getElementById("hero-banner-admin-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const current = { ...defaultBanner, ...readForm() };
+      current.imageUrl = normalizeImagePath(current.imageUrl);
+      banners[activeIndex] = current;
+      const cleanedBanners = banners.map(banner => ({ ...defaultBanner, ...banner, imageUrl: normalizeImagePath(banner.imageUrl || defaultBanner.imageUrl) }));
+      try {
+        await setDoc(bannerRef, {
+          banners: cleanedBanners,
+          ...cleanedBanners[0],
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        localStorage.setItem(BANNER_STORAGE_KEY, JSON.stringify(cleanedBanners[0]));
+        banners = cleanedBanners;
+        refreshSlideSelect();
+        alert("All banner slides saved. The storefront will update automatically.");
+      } catch (error) {
+        console.error("Failed to save banner slides:", error);
+        alert("Could not save banners to Firebase. Check your connection and Firestore permissions.");
+      }
+    });
+
+    onSnapshot(bannerRef, snapshot => {
+      if (!loadingRemote) return;
+      const data = snapshot.exists() ? snapshot.data() : defaultBanner;
+      banners = Array.isArray(data.banners) && data.banners.length
+        ? data.banners.map(item => ({ ...defaultBanner, ...item }))
+        : [{ ...defaultBanner, ...data }];
+      loadingRemote = false;
+      selectSlide(0);
+    }, error => {
+      console.error("Could not load live banner settings:", error);
+      loadingRemote = false;
+      banners = [{ ...defaultBanner }];
+      selectSlide(0);
+    });
+  </script>
+  <script type="module" src="../assets/js/mobile-bottom-nav.js"></script>
+</body>
+</html>

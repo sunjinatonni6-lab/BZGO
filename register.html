@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BazarGo - Register</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body>
+
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">BazarGo</a>
+      <div class="nav-actions">
+        <a href="index.html" class="btn btn-outline" style="color:var(--dark); border-color:var(--border);">
+          <i class="fa-solid fa-arrow-left"></i> Back to Store
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="auth-container">
+      <h2 style="margin-bottom: 0.5rem; text-align: center;">Create Account</h2>
+      <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Join BazarGo to manage orders and track shipments
+      </p>
+
+      <!-- Customer notice banner for checkout redirect -->
+      <div id="auth-notice" style="display: none; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:0.75rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem; text-align:center;"></div>
+
+      <div id="reg-error" style="display: none; background:#fee2e2; border:1px solid #f87171; color:#b91c1c; padding:0.75rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem;"></div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" required placeholder="Rahim Ahmed">
+        </div>
+
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="reg-email" required placeholder="name@example.com">
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="reg-password" required minlength="6" placeholder="At least 6 characters">
+        </div>
+
+        <button type="submit" id="reg-btn" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:0.5rem;">
+          Register Account
+        </button>
+      </form>
+
+      <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+        Already registered? <a id="login-link" href="login.html" style="color:var(--primary); font-weight:600;">Sign in here</a>
+      </p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { registerCustomer } from "./assets/js/auth.js";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectUrl = urlParams.get("redirect");
+
+    const noticeBox = document.getElementById("auth-notice");
+    const loginLink = document.getElementById("login-link");
+
+    if (redirectUrl) {
+      loginLink.href = `login.html?redirect=${encodeURIComponent(redirectUrl)}`;
+      noticeBox.textContent = "Please sign in or create an account to place your order.";
+      noticeBox.style.display = "block";
+    }
+
+    const regForm = document.getElementById("register-form");
+    const errorBox = document.getElementById("reg-error");
+    const regBtn = document.getElementById("reg-btn");
+
+    regForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorBox.style.display = "none";
+      regBtn.disabled = true;
+      regBtn.textContent = "Creating Account...";
+
+      const name = document.getElementById("reg-name").value.trim();
+      const email = document.getElementById("reg-email").value.trim();
+      const password = document.getElementById("reg-password").value;
+
+      try {
+        await registerCustomer(email, password, name);
+        if (redirectUrl) {
+          window.location.href = redirectUrl;
+        } else {
+          window.location.href = "index.html";
+        }
+      } catch (err) {
+        errorBox.textContent = err.message || "Failed to create account.";
+        errorBox.style.display = "block";
+      } finally {
+        regBtn.disabled = false;
+        regBtn.textContent = "Register Account";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+
+/* Admin dashboard responsive layout */
+.admin-sidebar { flex: 0 0 250px; min-width: 0; }
+.admin-content { min-width: 0; overflow-x: auto; }
+.admin-content > * { max-width: 100%; }
+.admin-content table { width: 100%; }
+@media (max-width: 768px) {
+  body { display: flex; flex-direction: column; }
+  .admin-sidebar { flex: 0 0 auto; width: 100%; }
+  .admin-sidebar h2 { margin-bottom: .75rem; }
+  .admin-nav { flex-direction: row; flex-wrap: wrap; }
+  .admin-content { padding: 1rem; overflow-x: auto; }
+  .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr)); }
+}
+@media (max-width: 375px) {
+  .admin-content { padding: .65rem; }
+  .metric-card { padding: .9rem; }
+  .metric-card p { font-size: 1.35rem; overflow-wrap: anywhere; }
+}
+
+
+/* Shared mobile layout fixes for every admin page. */
+*, *::before, *::after { box-sizing: border-box; }
+.admin-main, .admin-content, main, section, .card { min-width: 0; max-width: 100%; }
+.admin-sidebar { flex-shrink: 0; }
+.admin-content { overflow-x: hidden; }
+.admin-content table, .admin-main table { display: block; width: 100%; max-width: 100%; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+.admin-content input, .admin-content select, .admin-content textarea, .admin-main input, .admin-main select, .admin-main textarea { max-width: 100%; min-width: 0; }
+@media (max-width: 768px) {
+  body:has(.admin-sidebar) { display: flex; flex-direction: column; }
+  .admin-sidebar { width: 100%; max-width: 100%; position: static; }
+  .sidebar-menu, .admin-nav { display: flex; flex-direction: row; flex-wrap: wrap; }
+  .admin-main { width: 100%; }
+  .admin-topbar { padding: 1rem; }
+  .admin-content { padding: 1rem; }
+  .admin-content section, .admin-content > div { padding: .85rem !important; }
+}
+@media (max-width: 420px) {
+  .admin-content { padding: .6rem; }
+  .admin-sidebar { padding: .75rem; }
+  .sidebar-brand { font-size: 1rem; }
+  .metrics-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Customer Orders: responsive table on desktop, readable order cards on phones. */
+.orders-panel { background:#fff; border-radius:8px; border:1px solid var(--border, #e2e8f0); padding:clamp(.65rem, 2vw, 1.5rem); width:100%; min-width:0; }
+.orders-table-wrap { width:100%; min-width:0; }
+.orders-table { width:100%; border-collapse:collapse; table-layout:auto; white-space:normal; }
+.orders-table th, .orders-table td { padding:.75rem; text-align:left; vertical-align:top; border-bottom:1px solid #e2e8f0; overflow-wrap:anywhere; }
+.orders-table th { font-size:.85rem; color:#475569; background:#f8fafc; }
+.orders-table tbody tr:last-child td { border-bottom:0; }
+.orders-table .order-id { font-family:monospace; }
+.orders-table .order-date { min-width:145px; font-size:.88rem; }
+.orders-table .order-actions { min-width:150px; }
+.orders-table select { width:100%; margin:.15rem 0; padding:.5rem; border:1px solid var(--border, #cbd5e1); border-radius:5px; background:#fff; }
+@media (min-width:769px) {
+  .orders-table-wrap { overflow-x:auto; }
+  .orders-table { min-width:850px; }
+}
+@media (max-width:768px) {
+  .orders-table, .orders-table tbody { display:block; width:100%; }
+  .orders-table thead { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .orders-table tbody tr { display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:0 0 1rem; padding:.65rem .8rem; border:1px solid #e2e8f0; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+  .orders-table tbody tr:last-child { margin-bottom:0; }
+  .orders-table tbody td { display:grid; grid-template-columns:minmax(100px, .8fr) minmax(0, 1.2fr); gap:.7rem; padding:.6rem 0; border-bottom:1px solid #f1f5f9; min-width:0; }
+  .orders-table tbody td:last-child { border-bottom:0; }
+  .orders-table tbody td::before { content:attr(data-label); color:#64748b; font-size:.8rem; font-weight:700; }
+  .orders-table .order-actions { min-width:0; }
+  .orders-table select { min-width:0; max-width:100%; }
+}
+@media (max-width:380px) {
+  .orders-table tbody tr { padding:.5rem .65rem; }
+  .orders-table tbody td { grid-template-columns:1fr; gap:.25rem; font-size:.9rem; }
+  .orders-table tbody td::before { font-size:.75rem; }
+}
+
+
+/* Customer Orders: prevent oversized blank gaps between columns.
+   Scope overrides to this table so other admin pages remain unchanged. */
+@media (min-width: 769px) {
+  .admin-content .orders-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .admin-content table.orders-table {
+    display: table;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    white-space: normal;
+    overflow: visible;
+  }
+  .admin-content table.orders-table thead { display: table-header-group; }
+  .admin-content table.orders-table tbody { display: table-row-group; width: auto; }
+  .admin-content table.orders-table tr { display: table-row; }
+  .admin-content table.orders-table th,
+  .admin-content table.orders-table td {
+    padding: .65rem .55rem;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    vertical-align: top;
+  }
+  .admin-content table.orders-table th:nth-child(1),
+  .admin-content table.orders-table td:nth-child(1) { width: 8%; }
+  .admin-content table.orders-table th:nth-child(2),
+  .admin-content table.orders-table td:nth-child(2) { width: 14%; }
+  .admin-content table.orders-table th:nth-child(3),
+  .admin-content table.orders-table td:nth-child(3) { width: 15%; }
+  .admin-content table.orders-table th:nth-child(4),
+  .admin-content table.orders-table td:nth-child(4) { width: 25%; }
+  .admin-content table.orders-table th:nth-child(5),
+  .admin-content table.orders-table td:nth-child(5) { width: 9%; }
+  .admin-content table.orders-table th:nth-child(6),
+  .admin-content table.orders-table td:nth-child(6) { width: 9%; }
+  .admin-content table.orders-table th:nth-child(7),
+  .admin-content table.orders-table td:nth-child(7) { width: 9%; }
+  .admin-content table.orders-table th:nth-child(8),
+  .admin-content table.orders-table td:nth-child(8) { width: 11%; }
+  .admin-content table.orders-table .order-date,
+  .admin-content table.orders-table .order-actions { min-width: 0; }
+  .admin-content table.orders-table select { width: 100%; min-width: 0; max-width: 100%; }
+}
+@media (max-width: 768px) {
+  .admin-content table.orders-table { display: block; width: 100%; min-width: 0; white-space: normal; overflow-x: visible; }
+}
+
+/* BazarGo responsive polish (shared by dashboard, products, orders and banner). */
+.admin-sidebar {
+  flex: 0 0 250px;
+  width: 250px;
+  min-width: 0;
+}
+.admin-content,
+.admin-main,
+.admin-topbar,
+.dashboard-content,
+.dashboard-panel,
+.card,
+.orders-panel,
+.orders-table-wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-content img,
+.admin-main img { max-width: 100%; height: auto; }
+.admin-content input,
+.admin-content select,
+.admin-content textarea,
+.admin-main input,
+.admin-main select,
+.admin-main textarea { min-width: 0; max-width: 100%; }
+
+/* Orders: allocate space to all nine columns, including Update Order. */
+.admin-content .orders-table-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
+.admin-content table.orders-table {
+  width: 100%;
+  min-width: 1080px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  white-space: normal;
+}
+.admin-content table.orders-table th,
+.admin-content table.orders-table td {
+  padding: .75rem .6rem;
+  vertical-align: top;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.admin-content table.orders-table th:nth-child(1),
+.admin-content table.orders-table td:nth-child(1) { width: 7%; }
+.admin-content table.orders-table th:nth-child(2),
+.admin-content table.orders-table td:nth-child(2) { width: 12%; }
+.admin-content table.orders-table th:nth-child(3),
+.admin-content table.orders-table td:nth-child(3) { width: 13%; }
+.admin-content table.orders-table th:nth-child(4),
+.admin-content table.orders-table td:nth-child(4) { width: 15%; }
+.admin-content table.orders-table th:nth-child(5),
+.admin-content table.orders-table td:nth-child(5) { width: 12%; }
+.admin-content table.orders-table th:nth-child(6),
+.admin-content table.orders-table td:nth-child(6) { width: 9%; }
+.admin-content table.orders-table th:nth-child(7),
+.admin-content table.orders-table td:nth-child(7) { width: 10%; }
+.admin-content table.orders-table th:nth-child(8),
+.admin-content table.orders-table td:nth-child(8) { width: 10%; }
+.admin-content table.orders-table th:nth-child(9),
+.admin-content table.orders-table td:nth-child(9) { width: 12%; }
+.admin-content table.orders-table th:last-child { min-width: 130px; white-space: normal; }
+.admin-content table.orders-table .order-actions { min-width: 0; }
+.admin-content table.orders-table .order-actions select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: .25rem 0 .45rem;
+  padding: .55rem .45rem;
+  font-size: .82rem;
+}
+
+@media (max-width: 900px) {
+  body:has(.admin-sidebar) { align-items: stretch; }
+  .admin-sidebar { flex: 0 0 auto; width: 100%; }
+  .admin-content { width: 100%; padding: clamp(.75rem, 3vw, 1.25rem); }
+  .admin-nav, .sidebar-menu { flex-wrap: wrap; }
+  .dashboard-grid, .lower-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 768px) {
+  .admin-sidebar { padding: .85rem 1rem; }
+  .admin-sidebar h2 { margin: 0 0 .75rem; }
+  .admin-nav, .sidebar-menu { gap: .4rem; }
+  .admin-nav a, .sidebar-menu a { min-height: 42px; }
+  .admin-content { overflow-x: hidden; }
+  .orders-panel { padding: .65rem; }
+  .admin-content table.orders-table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+    table-layout: auto;
+  }
+  .admin-content table.orders-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .admin-content table.orders-table tbody { display: block; width: 100%; }
+  .admin-content table.orders-table tbody tr {
+    display: block;
+    width: 100%;
+    margin: 0 0 .85rem;
+    padding: .75rem .85rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+  }
+  .admin-content table.orders-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(105px, .75fr) minmax(0, 1.25fr);
+    gap: .75rem;
+    width: 100%;
+    padding: .6rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: left;
+  }
+  .admin-content table.orders-table tbody td:last-child { border-bottom: 0; }
+  .admin-content table.orders-table tbody td::before {
+    content: attr(data-label);
+    color: #64748b;
+    font-size: .78rem;
+    font-weight: 700;
+  }
+  .admin-content table.orders-table .order-actions { display: grid; grid-template-columns: minmax(105px, .75fr) minmax(0, 1.25fr); }
+  .admin-content table.orders-table .order-actions select { grid-column: 2; }
+  .admin-content .table-container { overflow-x: auto; }
+  .admin-topbar { flex-wrap: wrap; gap: .75rem; }
+}
+@media (max-width: 420px) {
+  .admin-content { padding: .65rem; }
+  .orders-panel { padding: .45rem; }
+  .admin-content table.orders-table tbody tr { padding: .6rem .7rem; }
+  .admin-content table.orders-table tbody td,
+  .admin-content table.orders-table .order-actions {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .3rem;
+  }
+  .admin-content table.orders-table .order-actions select { grid-column: 1; }
+  .admin-nav a, .sidebar-menu a { padding: .55rem .65rem; font-size: .84rem; }
+}
+
+/* Final admin mobile pass: preserve the desktop sidebar, simplify phone navigation. */
+@media (max-width: 768px) {
+  body:has(.admin-sidebar) { width:100%; min-width:320px; overflow-x:clip; }
+  .admin-sidebar { width:100%; max-width:100%; flex:0 0 auto; padding:.8rem .9rem; }
+  .admin-sidebar .sidebar-brand { display:block; margin-bottom:.65rem; font-size:1.05rem; }
+  .admin-sidebar .sidebar-menu, .admin-nav {
+    display:flex; flex-direction:row; flex-wrap:nowrap; gap:.4rem;
+    width:100%; overflow-x:auto; padding:0 0 .35rem;
+    -webkit-overflow-scrolling:touch; scrollbar-width:thin;
+  }
+  .admin-sidebar .sidebar-menu a, .admin-nav a {
+    flex:0 0 auto; min-height:42px; padding:.6rem .75rem;
+    white-space:nowrap; font-size:.84rem;
+  }
+  .admin-sidebar .sidebar-footer { margin-top:.5rem; }
+  .admin-main, .admin-content, .dashboard-content { width:100%; min-width:0; max-width:100%; }
+  .admin-content { padding:.8rem; }
+  .admin-topbar { min-width:0; padding:.8rem; gap:.6rem; flex-wrap:wrap; }
+  .dashboard-topbar { align-items:flex-start; }
+  .topbar-left, .topbar-actions { min-width:0; max-width:100%; flex-wrap:wrap; }
+  .dashboard-welcome { display:flex; flex-direction:column; gap:.8rem; }
+  .welcome-actions { flex-wrap:wrap; }
+  .metrics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }
+  .metric-card { min-width:0; padding:.85rem; }
+  .metric-value { overflow-wrap:anywhere; font-size:clamp(1.15rem,5vw,1.6rem); }
+  .dashboard-grid, .lower-grid { grid-template-columns:minmax(0,1fr); gap:.8rem; }
+  .dashboard-panel { min-width:0; padding:.85rem; }
+  .panel-heading { align-items:flex-start; flex-wrap:wrap; gap:.55rem; }
+  .recent-tools { width:100%; flex-wrap:wrap; }
+  .order-search { flex:1 1 100%; min-width:0; }
+  .table-container { width:100%; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .dashboard-table { min-width:650px; }
+  .admin-content input, .admin-content select, .admin-content textarea,
+  .admin-main input, .admin-main select, .admin-main textarea { width:100%; min-width:0; max-width:100%; font-size:16px; }
+  .admin-content button, .admin-main button { min-height:42px; }
+  .orders-table tbody td { grid-template-columns:minmax(0, .8fr) minmax(0, 1.2fr); }
+}
+@media (max-width: 480px) {
+  .admin-content { padding:.6rem; }
+  .admin-sidebar { padding:.7rem; }
+  .admin-sidebar .sidebar-menu a, .admin-nav a { padding:.55rem .65rem; font-size:.78rem; }
+  .metrics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .metric-card { padding:.7rem; }
+  .metric-title, .metric-note { font-size:.72rem; }
+  .dashboard-panel { padding:.7rem; }
+  .panel-heading h2 { font-size:1.05rem; }
+  .orders-panel { padding:.55rem; }
+  .orders-table tbody td { grid-template-columns:1fr; gap:.25rem; }
+  .orders-table tbody td::before { font-size:.72rem; }
+}

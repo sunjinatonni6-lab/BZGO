@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BazarGo - Login</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body>
+
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">BazarGo</a>
+      <div class="nav-actions">
+        <a href="index.html" class="btn btn-outline" style="color:var(--dark); border-color:var(--border);">
+          <i class="fa-solid fa-arrow-left"></i> Back to Store
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="auth-container">
+      <h2 style="margin-bottom: 0.5rem; text-align: center;">Sign In</h2>
+      <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Sign in to your customer or admin account
+      </p>
+
+      <!-- Customer notice banner for checkout redirect -->
+      <div id="auth-notice" style="display: none; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:0.75rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem; text-align:center;"></div>
+
+      <div id="auth-error" style="display: none; background:#fee2e2; border:1px solid #f87171; color:#b91c1c; padding:0.75rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem;"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="login-email" required placeholder="name@example.com">
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </div>
+
+        <button type="submit" id="login-btn" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:0.5rem;">
+          Sign In
+        </button>
+      </form>
+
+      <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+        Don't have an account? <a id="register-link" href="register.html" style="color:var(--primary); font-weight:600;">Create one here</a>
+      </p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { loginCustomer } from "./assets/js/auth.js";
+    import { db } from "./assets/js/firebase-config.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectUrl = urlParams.get("redirect");
+    const noticeMsg = urlParams.get("msg");
+
+    const noticeBox = document.getElementById("auth-notice");
+    const registerLink = document.getElementById("register-link");
+
+    if (redirectUrl) {
+      registerLink.href = `register.html?redirect=${encodeURIComponent(redirectUrl)}`;
+    }
+
+    if (noticeMsg) {
+      noticeBox.textContent = noticeMsg;
+      noticeBox.style.display = "block";
+    } else if (redirectUrl) {
+      noticeBox.textContent = "Please sign in or create an account to place your order.";
+      noticeBox.style.display = "block";
+    }
+
+    const loginForm = document.getElementById("login-form");
+    const errorBox = document.getElementById("auth-error");
+    const submitBtn = document.getElementById("login-btn");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorBox.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Signing In...";
+
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const user = await loginCustomer(email, password);
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        const userData = userSnap.data();
+
+        if (userData && userData.role === "admin") {
+          window.location.href = "admin/dashboard.html";
+        } else if (redirectUrl) {
+          window.location.href = redirectUrl;
+        } else {
+          window.location.href = "index.html";
+        }
+      } catch (err) {
+        errorBox.textContent = err.message || "Invalid credentials.";
+        errorBox.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign In";
+      }
+    });
+  </script>
+</body>
+</html>
